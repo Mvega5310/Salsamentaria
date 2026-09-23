@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #efe7dc;
+  color: #2a1c16;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cifras tabulares para precios y totales */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ocultar scrollbar en carruseles de categorías */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
