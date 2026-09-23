@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { buildHostedCheckoutParams } from "@/lib/billing/wompi";
 import { cop } from "@/lib/format";
+import type { StorefrontOrderTotal } from "@/lib/storefront/types";
 
 export const dynamic = "force-dynamic";
 
@@ -19,12 +20,15 @@ export default async function PagarPage({
   const { data } = await supabase
     .rpc("get_storefront_order_total", { p_order_id: params.orderId })
     .maybeSingle();
+  // El proyecto no incluye el tipo `Database` generado por Supabase, así
+  // que `.rpc()` infiere `{}`; la forma real la define la migración 17.
+  const order = data as StorefrontOrderTotal | null;
 
-  if (!data || data.tenant_slug !== params.slug) notFound();
+  if (!order || order.tenant_slug !== params.slug) notFound();
 
   // Ya está pagado (por ejemplo, el cliente volvió atrás y reabrió el
   // enlace) — no mostrar el checkout de nuevo, solo el estado.
-  if (data.payment_status === "pagado") {
+  if (order.payment_status === "pagado") {
     redirect(`/tienda/${params.slug}/pedido/${params.orderId}`);
   }
 
@@ -37,7 +41,7 @@ export default async function PagarPage({
 
   const checkout = buildHostedCheckoutParams({
     reference,
-    amountInCents: Math.round(Number(data.total) * 100),
+    amountInCents: Math.round(Number(order.total) * 100),
     redirectUrl: `${siteUrl}/tienda/${params.slug}/pedido/${params.orderId}`,
   });
 
@@ -66,7 +70,7 @@ export default async function PagarPage({
         Total a pagar
       </div>
       <div className="mb-6 font-display text-[36px] font-extrabold tracking-tight text-salsa">
-        {cop(Number(data.total))}
+        {cop(Number(order.total))}
       </div>
       <div dangerouslySetInnerHTML={{ __html: widgetHtml }} />
       <p className="mt-6 max-w-[280px] text-[12px] text-muted">

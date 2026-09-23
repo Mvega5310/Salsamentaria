@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export function createClient() {
@@ -12,7 +12,9 @@ export function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(
+          cookiesToSet: { name: string; value: string; options: CookieOptions }[],
+        ) {
           // En un Server Component puro esto puede lanzar; el middleware
           // refresca la sesión, así que lo ignoramos con seguridad.
           try {

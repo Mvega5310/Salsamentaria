@@ -7,14 +7,14 @@ Sistema POS + PWA multi-inquilino para salsamentarías (Colombia), con venta por
 ```
 backend/    Capa de datos: migraciones SQL de Supabase (esquema, RLS, funciones, métricas, vistas)
 frontend/   App Next.js 14 (App Router) — UI + rutas API + server actions
-docs/       Documentación de arquitectura e historial de sprints
+docs/       ARQUITECTURA.md, PUESTA-EN-MARCHA.md, RUTAS.md + historial de sprints
 ```
 
 Este proyecto es full-stack sobre Next.js + Supabase: no hay un servidor backend independiente. "Backend" aquí es la capa de datos de Supabase (Postgres, Row-Level Security, funciones `SECURITY DEFINER`, vistas de métricas); la lógica de servidor propiamente dicha (rutas API, server actions, middleware) vive dentro de `frontend/` porque así lo pide el App Router de Next.js.
 
 ## `backend/migrations/`
 
-18 migraciones, deben aplicarse en orden (01 → 18) contra un proyecto Supabase, vía SQL Editor o `supabase db push`. Cada una asume que las anteriores ya corrieron.
+18 migraciones, deben aplicarse en orden (01 → 18) contra un proyecto Supabase, vía SQL Editor o `supabase db push`. Cada una asume que las anteriores ya corrieron. Detalle de qué agrega cada una en `docs/RUTAS.md`.
 
 ## `frontend/`
 
@@ -25,16 +25,16 @@ npm install
 npm run dev                    # http://localhost:3000
 ```
 
-Requiere Node 18.18+ (o 20+).
+Requiere Node 18.18+ (o 20+). Guía completa de puesta en marcha (Supabase, Wompi, Factus, Vercel) en `docs/PUESTA-EN-MARCHA.md`.
 
-### Estado conocido (pendiente antes de producción)
+### Estado de las pruebas funcionales (2026-09-22)
 
-- `tsc --noEmit` reporta 20 errores preexistentes (no introducidos al reestructurar el proyecto):
-  - `app/tienda/[slug]/pagar/[orderId]/page.tsx` y `app/tienda/[slug]/pedido/[orderId]/page.tsx`: las llamadas a `supabase.rpc(...)` infieren `{}` porque el proyecto nunca incluyó el tipo `Database` generado por Supabase.
-  - `lib/supabase/middleware.ts` y `lib/supabase/server.ts`: parámetros implícitamente `any` en el callback `setAll` de `@supabase/ssr`, bajo `strict: true`.
-- No hay `.eslintrc` ni script `lint` — Next no trae ESLint configurado en este proyecto.
-- `npm run dev` arranca correctamente pero cualquier ruta que toque Supabase devuelve 500 sin credenciales reales en `.env.local` (comportamiento esperado).
-- `next@14.2.15` tiene 2 vulnerabilidades conocidas según `npm audit` (1 alta, 1 crítica) — revisar antes de desplegar.
+- ✅ `npm install` — sin errores.
+- ✅ `npx tsc --noEmit` — sin errores (se corrigieron los 20 que había: tipos de retorno de los RPC de la tienda pública, sin tipar antes; y parámetros `any` implícitos en el callback `setAll` de `@supabase/ssr`).
+- ✅ `npm run build` — compila limpio, las 13 rutas incluidas. Se corrigió un bug real encontrado al probar: `api/webhooks/wompi` y `api/cron/charge-subscriptions` creaban su cliente Supabase (`service_role`) a nivel de módulo, lo que rompía el build sin credenciales; ahora se crea de forma perezosa (`lib/supabase/admin.ts`) y el cron se marcó `force-dynamic` para que Next no intente prerenderizarlo.
+- ⚠️ `npm run dev` arranca (`✓ Ready`), pero cualquier ruta que toque Supabase da 500 sin credenciales reales en `.env.local` — **esperado**, depende de tener un proyecto Supabase real (ver `docs/PUESTA-EN-MARCHA.md`).
+- ⚠️ No hay `.eslintrc` ni script `lint` — Next no trae ESLint configurado en este proyecto; no se agregó porque no estaba en el alcance pedido.
+- ⚠️ `next@14.2.15` tiene 2 vulnerabilidades conocidas según `npm audit` (1 alta, 1 crítica) — revisar antes de desplegar (requiere subir de versión, fuera del alcance de esta reestructuración).
 
 ## `docs/historial-sprints/`
 
@@ -54,7 +54,7 @@ El proyecto se construyó incrementalmente en 11 sprints (cada uno como una conv
 | `10-tablero-tiempo-real` | Alertas en vivo de pedidos nuevos (Supabase Realtime) |
 | `11-pago-online-storefront-wompi` | Pago en línea en el checkout del cliente final |
 
-Ver `docs/historial-sprints/11-pago-online-storefront-wompi/ARQUITECTURA.md` para la arquitectura completa y más reciente.
+La arquitectura completa y actualizada vive en `docs/ARQUITECTURA.md` (consolidada a partir de la última versión, la de `11-pago-online-storefront-wompi/`). El mapa de cada ruta del frontend y cada migración está en `docs/RUTAS.md`.
 
 ## Pendiente en el producto (no solo en el código)
 

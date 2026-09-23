@@ -1,4 +1,5 @@
 import type { ProductUnit } from "@/lib/format";
+import type { OrderStatus } from "@/lib/types";
 
 export type StorefrontTenant = {
   id: string;
@@ -32,3 +33,20 @@ export type StorefrontProduct = {
 };
 
 export type CartLine = { product: StorefrontProduct; qty: number };
+
+/** Fila que retorna el RPC `get_storefront_order_total` (migración 17). */
+export type StorefrontOrderTotal = {
+  total: number;
+  payment_status: "pendiente" | "pagado" | "fallido" | "reembolsado";
+  tenant_slug: string;
+};
+
+/** Fila que retorna el RPC `get_storefront_order_status` (migración 15). */
+export type StorefrontOrderStatus = {
+  code: string;
+  status: OrderStatus;
+  fulfillment: "domicilio" | "recoger" | "mostrador";
+  total: number;
+  created_at: string;
+  tenant_name: string;
+};

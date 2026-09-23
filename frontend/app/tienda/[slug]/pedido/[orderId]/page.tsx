@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cop } from "@/lib/format";
+import type { StorefrontOrderStatus } from "@/lib/storefront/types";
 
 export const dynamic = "force-dynamic";
 
@@ -22,23 +23,26 @@ export default async function OrderStatusPage({
   const { data } = await supabase
     .rpc("get_storefront_order_status", { p_order_id: params.orderId })
     .maybeSingle();
+  // El proyecto no incluye el tipo `Database` generado por Supabase, así
+  // que `.rpc()` infiere `{}`; la forma real la define la migración 15.
+  const order = data as StorefrontOrderStatus | null;
 
-  if (!data) notFound();
+  if (!order) notFound();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-bg px-6 text-center">
       <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-        {data.tenant_name}
+        {order.tenant_name}
       </div>
       <div className="my-2 font-display text-[40px] font-extrabold tracking-tight text-ink">
-        {data.code}
+        {order.code}
       </div>
       <span className="rounded-full bg-crema2 px-4 py-2 text-[13px] font-bold text-ink">
-        {STATUS_LABEL[data.status] ?? data.status}
+        {STATUS_LABEL[order.status] ?? order.status}
       </span>
-      <div className="tabular mt-5 text-[28px] font-bold text-salsa">{cop(Number(data.total))}</div>
+      <div className="tabular mt-5 text-[28px] font-bold text-salsa">{cop(Number(order.total))}</div>
       <div className="mt-1 text-[12.5px] text-muted">
-        {data.fulfillment === "domicilio" ? "Entrega a domicilio" : "Para recoger en tienda"}
+        {order.fulfillment === "domicilio" ? "Entrega a domicilio" : "Para recoger en tienda"}
       </div>
       <p className="mt-8 max-w-[280px] text-[12px] text-muted">
         Guarda esta página o el enlace para ver el estado de tu pedido. El

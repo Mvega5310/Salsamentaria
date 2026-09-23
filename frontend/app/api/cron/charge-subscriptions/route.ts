@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { chargePaymentSource } from "@/lib/billing/wompi";
 
 /**
@@ -14,12 +14,12 @@ import { chargePaymentSource } from "@/lib/billing/wompi";
  * cron marcara el pago como exitoso por su cuenta, un cobro que Wompi
  * rechaza silenciosamente activaría el servicio sin que nadie haya pagado.
  */
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// Lee el header Authorization y llama a Wompi en cada invocación — nunca
+// debe optimizarse como estática (Next intentaría ejecutarla en build).
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
   const auth = req.headers.get("authorization");
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { verifyWebhookSignature } from "@/lib/billing/wompi";
 
 /**
@@ -10,12 +10,8 @@ import { verifyWebhookSignature } from "@/lib/billing/wompi";
  * Usa el service role porque este endpoint no tiene sesión de usuario: la
  * autenticidad la garantiza la firma de Wompi, no Supabase Auth.
  */
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
-
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
   const payload = await req.json();
 
   if (payload.event !== "transaction.updated") {
